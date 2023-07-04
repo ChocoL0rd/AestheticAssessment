@@ -1,0 +1,46 @@
+datasets:
+    core.download.db - файл который нужно скопировать и поместить в эту директорию. содержит разметку (лежит в сервере по пути /media/s1/dataset/neurostocker/core/core.download.db) 
+    nessesary_files.csv - чтобы подгрузить нужные файлы локально. содержит id, img_path, img_name, rating.
+    db_file_check.ipynb - создает nessesary_files.csv из core.download.db.
+    get_ness_file.py - запускается на сервере и с помощью nessesary_files.csv, скачивает локально в папку all_data размеченные картинки, включая класс 5. Сохраняет картинку с названием [id картинки].jpg    
+    
+    data_check.ipynb - изучает то, что содержится в core.download.db и создает ann.csv
+    ann.csv - файл, который содержит только нужную информацию про размеченные картинки.
+    create_full_set.ipynb создает full_set.csv, где из ann.csv выброшены 5 рейтинг. Так же оставшиеся записаны в виде 0,1,2,3 (вместо 1,2,3,4). В промте убраны лишние символы.
+    
+    create_embeddings.ipynb - чтобы получить все эмбеддинги, нужно последовательно откоментить нужное name в 3 ячейке и запустить все далее. Сохраняются в папку embeddings в виде csv файлов, где столбцы emb_i - соответствующие координаты. 
+    clusterization.ipynb - по полученным эмбеддингам строит кластеры и сохраняет результаты в clusters. 
+    
+    large_open_clip_ebms.py - должен посчитать на сервере эмбеддинги для той библиотеки open_clip которую посоветовали (тоже может понадобиться откомментить/закоментить нужные строки). https://github.com/mlfoundations/open_clip
+    try_open_clip - должен отрисовать кластеризацию для llm, который получается из large_open_clip_embs.py
+    
+    
+    full_set_to_personalizedImageAesthetics.py - добавляет image_list.txt (full_set.csv в нужном формате) в personalizedImageAesthetics, чтобы сделать предикт на основных размеченных данных.
+    create_big_set.ipynb - отбирает из core.download.db 10k рандомных строк и формирует big_set.csv (этот набор не скачивается, т.к. скрипт, который его использовался на сервере). Закидывает в нужном формате big_set.txt в personalizedImageAesthetics, нужный для запуска предикта.
+
+
+
+code:
+    stage1:
+        clusterization - та же кластеризация что и в datasets/clusterization, решил сделать локально в папке для модели ViT-B/32.
+        
+        similarity.ipynb - проверяет теорию что есть связь между (косинусным) расстояниями эмбеддингов картинки и текста и таргетом (rating)
+        
+        personalizedImageAesthetics_check - проверяет результаты полученные из предикта (../../personalizedImageAesthetics/full_set_res.json, который получается обычным запуском скрипта, который сохраняет в res.json, а потом руками переименовал) на нашем размеченном датасете. Сохраняет разные иллюстрации типо худшие, лучшие для каждого кластера в виде коллажей. 
+        
+        hugging_model_check.ipynb - берет модель отсюда https://huggingface.co/spaces/radames/aesthetic-style-nsfw-classifier/blob/main/app.py и проверяет результаты.
+        
+        TANet_check.ipynb - проверяет результаты TANet на нашем датасете (там две версии предобученные на AVA и TAD66k), используя my_res.json (из директорий ../../../TANet/code/AVA и ../../../TANet/code/TAD66k) 
+        
+    
+    stage2:
+        get_keyw_embs_clip.py - формирует эмбеддинги для ключевых слов с помощью большого CLIP, сохраняет в open_clip_ViT-G-14_key_word_embs.csv. (запускалось на сервере)
+        key_w_check.ipynb - по этим ключевым словам строим вероятности и смотрим корреляцию с таргетом.
+        
+        try_large_clip - используем эмбеддинги созданные файлом large_open_clip_ebms.py в datasets, чтобы проверить зависимость между таргетом и расстоянием эмбеддинга до центроиды кластера построенного на эмбеддингах. (использовал только open_clip_ViT-G-14_img эмбеддинги, который лежит в datasets/embeddings)
+        
+        save_good_predicts.py - нужен был, чтобы проверить работает ли модель personalizedImageAesthetics с выставленным трешхолдом (смотреть файл personalizedImageAesthetics_check). Сохраняет картинки прям из общей директории на сервере, которые прошли по данной модели трешхолд. 
+    
+    
+    
+    

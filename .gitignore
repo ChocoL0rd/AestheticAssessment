@@ -1,0 +1,4 @@
+core.download.db
+*.jpg*
+*.pth
+*.pth.tar
